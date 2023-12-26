@@ -1,10 +1,24 @@
-import os
-from tkinter import Tk, Label, Entry, Button, StringVar
+import PySimpleGUI as sg
+import threading
 from pytube import YouTube
 from pydub import AudioSegment
+import os
 
+# Define the layout of the GUI
+layout = [
+    [sg.Text("Enter YouTube video URL:")],
+    [sg.Input(key="url")],
+    [sg.Text("", key="status")],
+    [sg.Button("Convert to MP3"), sg.Exit()],
+    [sg.ProgressBar(orientation="horizontal", size=(50, 20), max_value=100, key="progress")]
+]
+
+# Create the window
+window = sg.Window("YouTube to MP3 Converter", layout)
+
+# Define the function to download and convert the video
 def download_and_convert_to_mp3():
-    video_url = url_entry.get()
+    video_url = window["url"].get()
 
     try:
         # Download the YouTube video
@@ -21,27 +35,40 @@ def download_and_convert_to_mp3():
         # Delete the mp4 file
         os.remove(f'{video_title}.mp4')
 
-        result_label.config(text="Video downloaded and converted to MP3 successfully!")
+        # Update the status text
+        window.write_event_value('update_status', f"Video downloaded and converted to MP3 successfully!")
+
+        # Update the progress bar
+        window.write_event_value('update_progress', 100)
 
     except Exception as e:
-        result_label.config(text=f"Error: {str(e)}")
+        # Update the status text
+        window.write_event_value('update_status', f"Error: {str(e)}")
 
-# Create the main window
-root = Tk()
-root.title("YouTube to MP3 Converter")
+        # Update the progress bar
+        window.write_event_value('update_progress', 0)
 
-# Create and place widgets
-Label(root, text="Enter YouTube video URL:").grid(row=0, column=0, padx=10, pady=10)
+# Define the event loop
+while True:
+    event, values = window.read()
 
-url_var = StringVar()
-url_entry = Entry(root, textvariable=url_var, width=40)
-url_entry.grid(row=0, column=1, padx=10, pady=10)
+    if event == "Convert to MP3":
+        # Clear the status text
+        window["status"].update("")
 
-convert_button = Button(root, text="Convert to MP3", command=download_and_convert_to_mp3)
-convert_button.grid(row=1, column=0, columnspan=2, pady=10)
+        # Start a new thread to download and convert the video
+        threading.Thread(target=download_and_convert_to_mp3).start()
 
-result_label = Label(root, text="")
-result_label.grid(row=2, column=0, columnspan=2, pady=10)
+    elif event == "update_status":
+        # Update the status text
+        window["status"].update(values[event])
 
-# Start the main event loop
-root.mainloop()
+    elif event == "update_progress":
+        # Update the progress bar
+        window["progress"].update(values[event])
+
+    elif event == "Exit" or event is None:
+        break
+
+# Close the window
+window.close()
