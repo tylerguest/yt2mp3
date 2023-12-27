@@ -4,10 +4,12 @@ from pytube import YouTube
 from pydub import AudioSegment
 import os
 
+sg.theme("HotDogStand")
+
 # Define the layout of the GUI
 layout = [
     [sg.Text("Enter YouTube video URL:")],
-    [sg.Input(key="url")],
+    [sg.Input(key="url", size=70)],
     [sg.Text("", key="status")],
     [sg.Button("Convert to MP3"), sg.Exit()],
     [sg.ProgressBar(orientation="horizontal", size=(50, 20), max_value=100, key="progress")]
