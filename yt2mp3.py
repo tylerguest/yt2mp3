@@ -32,7 +32,18 @@ def download_and_convert_to_mp3():
 
         # Convert the video to MP3 using pydub
         audio = AudioSegment.from_file(f'{video_title}.mp4', format="mp4")
-        audio.export(f'{video_title}.mp3', format="mp3")
+
+        # Check if the MP3 file already exists
+        if os.path.exists(f'{video_title}.mp3'):
+            base, ext = os.path.splitext(f'{video_title}.mp3')
+            i = 1
+            while os.path.exists(f'{base}_{i}{ext}'):
+                i += 1
+            filename = f'{base}_{i}{ext}'
+        else:
+            filename = f'{video_title}.mp3'
+
+        audio.export(filename, format="mp3")
 
         # Delete the mp4 file
         os.remove(f'{video_title}.mp4')
